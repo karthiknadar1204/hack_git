@@ -7,9 +7,9 @@ import { initializeApp } from "firebase/app";
 // Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBL_kflc1NIEj8LwhK9Zb2b8FOwxPrvjKk",
-    authDomain: "dionysus-68f20.firebaseapp.com",
-    projectId: "dionysus-68f20",
-    storageBucket: "dionysus-68f20.firebasestorage.app",
+    authDomain: "GitChat-68f20.firebaseapp.com",
+    projectId: "GitChat-68f20",
+    storageBucket: "GitChat-68f20.firebasestorage.app",
     messagingSenderId: "613136820353",
     appId: "1:613136820353:web:fb6ed0a0bed45fda558580"
 };
