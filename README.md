@@ -1,29 +1,98 @@
-# Create T3 App
+# GitChat
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+GitChat is an intelligent collaboration tool that helps teams understand and interact with their GitHub repositories through AI-powered features. It provides commit analysis, codebase Q&A, and team collaboration capabilities.
 
-## What's next? How do I make an app with this?
+## 🌟 Features
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+### 1. Repository Analysis
+- Automatic repository scanning and indexing
+- AI-powered commit summaries and analysis
+- Code structure understanding and documentation
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+### 2. AI-Powered Q&A
+- Ask questions about your codebase
+- Context-aware responses using both Gemini and OpenAI
+- Code reference support with syntax highlighting
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+### 3. Team Collaboration
+- Multi-user support with Clerk authentication
+- Team member invitations
+- Shared project access and history
 
-## Learn More
+## 🛠 Tech Stack
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+- **Frontend**: Next.js 15, React 19, TailwindCSS
+- **Backend**: tRPC, Prisma
+- **Database**: PostgreSQL with Vector extensions
+- **AI/ML**: Google Gemini, OpenAI
+- **Authentication**: Clerk
+- **Deployment**: Docker, Fly.io
+- **Storage**: Firebase Storage
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+## 📋 Prerequisites
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+- Node.js 18+ or Bun 1.1.32+
+- PostgreSQL with Vector extension support
+- Google Gemini API key
+- OpenAI API key
+- Clerk account
+- Firebase project
 
-## How do I deploy this?
+## 🚀 Getting Started
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+1. Clone the repository:
+bash
+git clone <repository-url>
+cd GitChat
+  
+2. Install dependencies:
+bash
+bun install
+or
+npm install
+
+   
+3. Set up environment variables:
+DATABASE_URL=postgresql://...
+GEMINI_API_KEY=...
+OPENAI_API_KEY=...
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...
+CLERK_SECRET_KEY=...
+NEXT_PUBLIC_URL=http://localhost:3000
+
+4. Set up the database:
+bash
+bun prisma db push
+
+5. Start the development server:
+bash
+bun dev
+or
+npm run dev
+
+
+
+## 🔄 Core Workflows
+
+1. **Repository Integration**
+   - User creates a new project with GitHub repository URL
+   - System indexes the repository using GitHub API
+   - Code is analyzed and embedded using AI models
+
+2. **Q&A System**
+   - Questions are processed against embedded codebase
+   - Relevant code sections are retrieved using vector similarity
+   - AI generates contextual responses with code references
+
+3. **Commit Analysis**
+   - New commits are automatically detected
+   - Diff analysis is performed using AI
+   - Summaries are generated and stored
+
+
+
+
+
+
+
+
