@@ -89,9 +89,6 @@ npm run dev
    - Diff analysis is performed using AI
    - Summaries are generated and stored
 
-## 🐳 Docker Deployment
-
-The project includes Docker support for production deployment:
 
 
 
