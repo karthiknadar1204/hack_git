@@ -69,6 +69,7 @@ model SourceCodeEmbedding {
     @@unique([projectId, fileName])
 }
 
+
 model Question {
     id       String @id @default(cuid())
     question String
