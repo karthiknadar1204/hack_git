@@ -24,10 +24,7 @@ model User {
     projectId    String?
     questions    Question[]
 
-    credits Int @default(150)
-
     userToProjects     UserToProject[]
-    stripeTransactions StripeTransaction[]
 }
 
 model UserToProject {
@@ -103,15 +100,4 @@ model Commit {
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-}
-
-model StripeTransaction {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-
-    userId  String
-    credits Int
-
-    customerId String
-    user       User   @relation(fields: [userId], references: [id])
 }

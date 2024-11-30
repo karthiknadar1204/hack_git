@@ -6,7 +6,6 @@ const Logo = () => {
     const { open } = useSidebar()
     return (
         <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Logo" width={40} height={40} />
             {open && (
                 <span className="text-xl font-bold">
                     <span className="text-primary/80">
