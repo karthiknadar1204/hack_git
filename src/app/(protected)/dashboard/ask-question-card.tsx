@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { generate } from './action'
 import { readStreamableValue } from 'ai/rsc'
 import CodeReferences from './code-references';
-import Image from 'next/image';
 import { DownloadIcon } from 'lucide-react';
 import { api } from '@/trpc/react';
 import useProject from '@/hooks/use-project';
@@ -57,9 +56,7 @@ const AskQuestionCard = (props: Props) => {
             }}>
                 <DialogContent className='sm:max-w-[80vw]'>
                     <div className="flex items-center gap-2">
-                        <DialogTitle>
-                            <Image src="/logo.png" alt="Logo" width={40} height={40} />
-                        </DialogTitle>
+                        <DialogTitle>GitChat</DialogTitle>
                         <Button isLoading={saveAnswer.isPending || isLoading} variant="outline" onClick={() => {
                             saveAnswer.mutate({
                                 projectId,

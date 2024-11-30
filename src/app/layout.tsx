@@ -9,8 +9,8 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { ClerkProvider } from '@clerk/nextjs'
 
 export const metadata: Metadata = {
-  title: "Dionysus",
-  description: "AI Powered Github Dev Tool",
+  title: "GitChat",
+  description: "Chat with your GitHub repositories",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 

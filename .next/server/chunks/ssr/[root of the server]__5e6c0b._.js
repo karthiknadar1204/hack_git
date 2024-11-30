@@ -124,8 +124,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$geist$2f$dis
 ;
 ;
 const metadata = {
-    title: "Dionysus",
-    description: "AI Powered Github Dev Tool",
+    title: "GitChat",
+    description: "Chat with your GitHub repositories",
     icons: [
         {
             rel: "icon",
