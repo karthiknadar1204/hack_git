@@ -1,4 +1,14 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/webhooks/stripe/route": "app/api/webhooks/stripe/route.js",
   "/api/trpc/[trpc]/route": "app/api/trpc/[trpc]/route.js",
-  "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js"
+  "/sign-up/[[...sign-up]]/page": "app/sign-up/[[...sign-up]]/page.js",
+  "/page": "app/page.js",
+  "/sign-in/[[...sign-in]]/page": "app/sign-in/[[...sign-in]]/page.js",
+  "/sync-user/page": "app/sync-user/page.js",
+  "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js",
+  "/(protected)/join/[projectId]/page": "app/(protected)/join/[projectId]/page.js",
+  "/(protected)/create/page": "app/(protected)/create/page.js",
+  "/(protected)/files/page": "app/(protected)/files/page.js",
+  "/(protected)/qa/page": "app/(protected)/qa/page.js"
 }

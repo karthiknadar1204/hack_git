@@ -1,14 +1,13 @@
 'use client'
 import { api } from '@/trpc/react';
 import { useRouter } from 'next/navigation';
-import React, { useReducer, useRef } from 'react'
+import React from 'react'
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { AlertTriangle, ArrowRight, FileText, Github, Info, Key } from 'lucide-react';
 import useRefetch from '@/hooks/use-refetch';
-import { createCheckoutSession } from '@/lib/stripe';
 
 
 type FormInput = {

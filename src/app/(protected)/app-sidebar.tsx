@@ -36,11 +36,6 @@ const items = [
         url: "/qa",
         icon: Bot,
     },
-    {
-        title: "Billing",
-        url: "/billing",
-        icon: CreditCard,
-    },
 ]
 
 export function AppSidebar() {
