@@ -24,7 +24,7 @@ const TeamMembers = () => {
                                 <div className="relative">
                                     <Image 
                                         src={member.user.imageUrl ?? '/default-avatar.png'} 
-                                        alt={`Avatar of ${member.user.name}`} 
+                                        alt={`Avatar of ${member.user.firstName} ${member.user.lastName}`} 
                                         width={40} 
                                         height={40} 
                                         className="rounded-full border-2 border-blue-500 transition-transform duration-300 hover:scale-110 hover:border-blue-400"
