@@ -5,72 +5,91 @@ import { getSummary } from "./openai";
 import { exit } from "process";
 import { db } from "@/server/db";
 import { Octokit } from "octokit";
+
 const getFileCount = async (path: string, octokit: Octokit, githubOwner: string, githubRepo: string, acc: number = 0) => {
-    const { data } = await octokit.rest.repos.getContent({
-        owner: githubOwner,
-        repo: githubRepo,
-        path: path
-    })
-
-    if (!Array.isArray(data) && data.type === 'file') {
-        return acc + 1
-    }
-
-    if (Array.isArray(data)) {
-        let fileCount = 0
-        const directories: string[] = []
-
-        // Count files and collect directories in current level
-        for (const item of data) {
-            if (item.type === 'dir') {
-                directories.push(item.path)
-            } else {
-                fileCount += 1
-            }
+    try {
+        const { data } = await octokit.rest.repos.getContent({
+            owner: githubOwner,
+            repo: githubRepo,
+            path: path
+        });
+        
+        if (Array.isArray(data)) {
+            const limit = pLimit(5);
+            const counts = await Promise.all(
+                data.map(item => {
+                    if (item.type === 'dir') {
+                        return limit(() => getFileCount(item.path, octokit, githubOwner, githubRepo, 0));
+                    }
+                    return limit(() => Promise.resolve(1));
+                })
+            );
+            return acc + counts.reduce((a, b) => a + b, 0);
         }
-
-        // Process all directories at this level in parallel
-        if (directories.length > 0) {
-            const directoryCounts = await Promise.all(
-                directories.map(dirPath =>
-                    getFileCount(dirPath, octokit, githubOwner, githubRepo, 0)
-                )
-            )
-            fileCount += directoryCounts.reduce((sum, count) => sum + count, 0)
-        }
-
-        return acc + fileCount
+        return acc + 1;
+    } catch (error) {
+        console.error('Error getting file count:', error);
+        return acc;
     }
-
-    return acc
 }
 
 export const checkCredits = async (githubUrl: string, githubToken?: string) => {
     const octokit = new Octokit({
-        auth: githubToken || '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',
+        auth: githubToken
     });
-    const githubOwner = githubUrl.split('/')[3]
-    const githubRepo = githubUrl.split('/')[4]
-    if (!githubOwner || !githubRepo) return 0
-    const fileCount = await getFileCount('', octokit, githubOwner, githubRepo, 0)
-    return fileCount
+    
+    const urlParts = githubUrl.split('/');
+    const githubOwner = urlParts[3];
+    const githubRepo = urlParts[4]?.replace('.git', '');
+    
+    if (!githubOwner || !githubRepo) return 0;
+    
+    try {
+        const fileCount = await getFileCount('', octokit, githubOwner, githubRepo, 0);
+        return fileCount;
+    } catch (error) {
+        console.error('Error checking credits:', error);
+        return 0;
+    }
 }
 
 export const loadGithubRepo = async (githubUrl: string, githubToken?: string) => {
-    const loader = new GithubRepoLoader(
-        githubUrl,
-        {
-            branch: "main",
-            ignoreFiles: ['package-lock.json', 'bun.lockb'],
-            recursive: true,
-            // recursive: false,
-            accessToken: githubToken || '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',
-            unknown: "warn",
-            maxConcurrency: 5, // Defaults to 2
+    try {
+        const loader = new GithubRepoLoader(
+            githubUrl,
+            {
+                branch: "main",
+                ignoreFiles: ['package-lock.json', 'bun.lockb', 'yarn.lock', '.git'],
+                recursive: true,
+                accessToken: githubToken,
+                unknown: "warn",
+                maxConcurrency: 5,
+            }
+        );
+        
+        const docs = await loader.load();
+        return docs;
+    } catch (error) {
+        // Try fallback to master branch if main fails
+        try {
+            const loader = new GithubRepoLoader(
+                githubUrl,
+                {
+                    branch: "master",
+                    ignoreFiles: ['package-lock.json', 'bun.lockb', 'yarn.lock', '.git'],
+                    recursive: true,
+                    accessToken: githubToken,
+                    unknown: "warn",
+                    maxConcurrency: 5,
+                }
+            );
+            
+            const docs = await loader.load();
+            return docs;
+        } catch (fallbackError) {
+            throw new Error(`Unable to fetch repository files: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
-    );
-    const docs = await loader.load();
-    return docs
+    }
 };
 
 export const indexGithubRepo = async (projectId: string, githubUrl: string, githubToken?: string) => {

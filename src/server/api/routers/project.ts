@@ -9,26 +9,39 @@ export const projectRouter = createTRPCRouter({
   create: protectedProcedure
     .input(z.object({ name: z.string().min(1), githubUrl: z.string().min(1), githubToken: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
-      const project = await ctx.db.$transaction(async (tx) => {
-        const createdProject = await tx.project.create({
-          data: {
-            name: input.name,
-            githubUrl: input.githubUrl,
-          },
+      try {
+        const url = new URL(input.githubUrl);
+        if (!url.hostname.includes('github.com')) {
+          throw new Error('Invalid GitHub URL');
+        }
+
+        const project = await ctx.db.$transaction(async (tx) => {
+          const createdProject = await tx.project.create({
+            data: {
+              name: input.name,
+              githubUrl: input.githubUrl,
+            },
+          });
+
+          await tx.userToProject.create({
+            data: {
+              userId: ctx.user.userId!,
+              projectId: createdProject.id,
+            },
+          });
+
+          return createdProject;
         });
 
-        await tx.userToProject.create({
-          data: {
-            userId: ctx.user.userId!,
-            projectId: createdProject.id,
-          },
-        });
-
-        return createdProject;
-      });
-      await indexGithubRepo(project.id, input.githubUrl, input.githubToken);
-      await pollRepo(project.id)
-      return project;
+        await indexGithubRepo(project.id, input.githubUrl, input.githubToken);
+        await pollRepo(project.id);
+        return project;
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new Error(`Failed to create project: ${error.message}`);
+        }
+        throw error;
+      }
     }),
   archiveProject: protectedProcedure.input(z.object({ projectId: z.string() })).mutation(async ({ ctx, input }) => {
     await ctx.db.project.update({ where: { id: input.projectId }, data: { deletedAt: new Date() } });
