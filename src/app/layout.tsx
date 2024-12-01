@@ -19,13 +19,23 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${GeistSans.variable}`}>
-        <body>
+      <html lang="en" className={`${GeistSans.variable} dark`}>
+        <body className="bg-gray-900 text-gray-100">
           <TopLoader />
           <TRPCReactProvider>{children}</TRPCReactProvider>
-          <Toaster richColors />
+          <Toaster 
+            theme="dark" 
+            toastOptions={{
+              style: {
+                background: '#1F2937',
+                color: '#F3F4F6',
+                border: '1px solid #374151',
+              },
+            }}
+          />
         </body>
       </html>
     </ClerkProvider>
   );
 }
+

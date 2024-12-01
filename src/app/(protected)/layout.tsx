@@ -7,17 +7,18 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
     return (
         <SidebarProvider>
             <AppSidebar />
-            <main className="w-full m-2">
-                <div className="flex items-center gap-2 border-sidebar-border bg-sidebar border shadow rounded-md p-2 px-4">
+            <main className="w-full m-2 text-gray-300">
+                <div className="flex items-center gap-2 border-gray-800 bg-gray-900 border shadow-lg shadow-gray-900/50 rounded-md p-2 px-4">
                     <SearchBar />
                     <div className="ml-auto"></div>
                     <UserButton />
                 </div>
                 <div className="h-4"></div>
-                <div className="border-sidebar-border bg-sidebar border shadow rounded-md overflow-y-scroll h-[calc(100vh-6rem)] p-4">
+                <div className="border-gray-800 bg-gray-900 border shadow-lg shadow-gray-900/50 rounded-md overflow-y-scroll h-[calc(100vh-6rem)] p-4">
                     {children}
                 </div>
             </main>
         </SidebarProvider>
     )
 }
+
