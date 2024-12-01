@@ -1,15 +1,8 @@
 "use client";
+
 import MDEditor from "@uiw/react-md-editor";
 import { MarkdownPreviewRef } from "@uiw/react-markdown-preview";
 import React from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { generate } from "./action";
 import { readStreamableValue } from "ai/rsc";
 import CodeReferences from "./code-references";
-import { DownloadIcon } from "lucide-react";
+import { DownloadIcon, SendIcon } from 'lucide-react';
 import { api } from "@/trpc/react";
 import useProject from "@/hooks/use-project";
 import { toast } from "sonner";
@@ -39,6 +32,7 @@ const AskQuestionCard = (props: Props) => {
   const [filesReferenced, setFilesReferenced] = React.useState<
     Awaited<ReturnType<typeof generate>>["filesReferenced"]
   >([]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     if (!projectId) return;
     setAnswer("");
@@ -70,9 +64,9 @@ const AskQuestionCard = (props: Props) => {
           }
         }}
       >
-        <DialogContent className="sm:max-w-[80vw]">
-          <div className="flex items-center gap-2">
-            <DialogTitle>GitChat</DialogTitle>
+        <DialogContent className="sm:max-w-[80vw] bg-gray-900 text-gray-100 border border-gray-800">
+          <div className="flex items-center justify-between mb-4">
+            <DialogTitle className="text-2xl font-bold text-blue-400">GitChat Response</DialogTitle>
             <Button
               isLoading={saveAnswer.isPending || isLoading}
               variant="outline"
@@ -94,41 +88,47 @@ const AskQuestionCard = (props: Props) => {
                   },
                 );
               }}
+              className="bg-blue-600 hover:bg-blue-700 text-white border-none"
             >
-              <DownloadIcon className="h-4 w-4" />
+              <DownloadIcon className="h-4 w-4 mr-2" />
               Save Answer
             </Button>
           </div>
           <MDEditor.Markdown
             source={answer}
-            className="custom-ref !h-full max-h-[40vh] max-w-[70vw] overflow-scroll"
+            className="custom-ref !h-full max-h-[40vh] max-w-[70vw] overflow-scroll bg-gray-800 p-4 rounded-lg text-gray-300"
           />
           <CodeReferences filesReferenced={filesReferenced} />
-          <Button onClick={() => setOpen(false)}>Close</Button>
+          <Button onClick={() => setOpen(false)} className="bg-gray-800 hover:bg-gray-700 text-white mt-4">Close</Button>
         </DialogContent>
       </Dialog>
-      <Card className="relative col-span-3">
-        <CardHeader>
-          <CardTitle>Ask a question</CardTitle>
-          <CardDescription>
-            GitChat has knowledge of the codebase
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <Textarea
-              placeholder="Which file should I edit to change the home page?"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-            />
-            <Button isLoading={isLoading} className="mt-4">
-              Ask GitChat!
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <div className="bg-gray-900 rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-blue-900/10">
+        <h2 className="text-2xl font-bold mb-4 text-blue-400">Ask GitChat</h2>
+        <p className="text-gray-400 mb-6">GitChat has knowledge of the codebase</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <textarea
+            className="w-full p-3 bg-gray-800 text-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200 placeholder-gray-500"
+            placeholder="Which file should I edit to change the home page?"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            rows={4}
+          />
+          <Button 
+            isLoading={isLoading} 
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105"
+          >
+            {isLoading ? "Thinking..." : (
+              <>
+                <SendIcon className="mr-2 h-5 w-5" />
+                Ask GitChat
+              </>
+            )}
+          </Button>
+        </form>
+      </div>
     </>
   );
 };
 
 export default AskQuestionCard;
+
