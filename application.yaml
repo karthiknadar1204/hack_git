@@ -1,24 +1,220 @@
-datasources:
-  postgres:
-    url: jdbc:postgresql://localhost:5432/GitChat2
-    driverClassName: org.postgresql.Driver
-    username: postgres
-    password: ${DB_PASSWORD}
-kestra:
-  server:
-    basicAuth:
-      enabled: true
-      username: "admin@gitchat.io"
-      password: ${KESTRA_PASSWORD}
-  repository:
-    type: postgres
-  storage:
-    type: local
-    local:
-      basePath: "/app/storage"
-  queue:
-    type: postgres
-  tasks:
-    tmpDir:
-      path: "/tmp/gitchat-wd/tmp"
-  url: "http://localhost:3000/"
+id: gitchat_commit_analysis
+namespace: gitchat.core
+
+variables:
+  database_url: "postgresql://karthiknadar1204:Fvph9DyfVm2L@ep-restless-credit-a1c7489o.ap-southeast-1.aws.neon.tech/gitchat?sslmode=require"
+  openai_api_key: "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"
+
+inputs:
+  - id: project_id
+    type: STRING
+    required: true
+    description: "Project ID to analyze commits"
+
+tasks:
+  - id: poll_repository
+    type: io.kestra.core.tasks.scripts.Node
+    env:
+      DATABASE_URL: "{{ vars.database_url }}"
+      PROJECT_ID: "{{ inputs.project_id }}"
+      NODE_OPTIONS: "--no-warnings"
+    inputFiles:
+      package.json: |
+        {
+          "dependencies": {
+            "@prisma/client": "^5.14.0",
+            "axios": "^1.6.7",
+            "octokit": "^3.1.2"
+          }
+        }
+      main.js: |
+        const { PrismaClient } = require('@prisma/client');
+        const { Octokit } = require('octokit');
+        const axios = require('axios');
+        const Kestra = require('./kestra');
+
+        const prisma = new PrismaClient({
+          datasources: { db: { url: process.env.DATABASE_URL } }
+        });
+
+        const octokit = new Octokit();
+
+        async function getCommitHashes(githubUrl) {
+          const [owner, repo] = githubUrl.split('/').slice(-2);
+          const { data: commits } = await octokit.rest.repos.listCommits({
+            owner,
+            repo,
+            per_page: 100
+          });
+
+          return commits.map(commit => ({
+            commitHash: commit.sha,
+            commitMessage: commit.commit.message,
+            commitAuthorName: commit.commit.author.name,
+            commitDate: new Date(commit.commit.author.date),
+            commitAuthorAvatar: commit.author?.avatar_url
+          }));
+        }
+
+        async function filterUnprocessedCommits(projectId, commits) {
+          const processedCommits = await prisma.commit.findMany({
+            where: {
+              projectId: projectId
+            },
+            select: {
+              commitHash: true
+            }
+          });
+
+          const processedHashes = new Set(processedCommits.map(c => c.commitHash));
+          return commits.filter(commit => !processedHashes.has(commit.commitHash));
+        }
+
+        async function getDiff(githubUrl, commitHash) {
+          const [owner, repo] = githubUrl.split('/').slice(-2);
+          const { data: commit } = await octokit.rest.repos.getCommit({
+            owner,
+            repo,
+            ref: commitHash
+          });
+          return commit.files.map(file => ({
+            filename: file.filename,
+            patch: file.patch || '',
+            status: file.status
+          }));
+        }
+
+        async function pollRepo() {
+          try {
+            const project = await prisma.project.findUnique({
+              where: { id: process.env.PROJECT_ID },
+              select: { githubUrl: true }
+            });
+
+            if (!project?.githubUrl) {
+              throw new Error('Project not found or missing GitHub URL');
+            }
+
+            const commits = await getCommitHashes(project.githubUrl);
+            const unprocessedCommits = await filterUnprocessedCommits(process.env.PROJECT_ID, commits);
+            
+            const commitsWithDiffs = await Promise.all(
+              unprocessedCommits.map(async (commit) => {
+                const diff = await getDiff(project.githubUrl, commit.commitHash);
+                return { ...commit, diff };
+              })
+            );
+
+            Kestra.outputs({ commits: JSON.stringify(commitsWithDiffs) });
+          } catch (error) {
+            console.error('Error polling repository:', error);
+            process.exit(1);
+          }
+        }
+
+        pollRepo();
+
+  - id: summarize_commits
+    type: io.kestra.core.tasks.scripts.Node
+    env:
+      DATABASE_URL: "{{ vars.database_url }}"
+      PROJECT_ID: "{{ inputs.project_id }}"
+      OPENAI_API_KEY: "{{ vars.openai_api_key }}"
+      COMMITS: "{{ outputs.poll_repository.commits }}"
+      NODE_OPTIONS: "--no-warnings"
+    inputFiles:
+      package.json: |
+        {
+          "dependencies": {
+            "@prisma/client": "^5.14.0",
+            "openai": "^4.0.0"
+          }
+        }
+      main.js: |
+        const { OpenAI } = require('openai');
+        const { PrismaClient } = require('@prisma/client');
+        const Kestra = require('./kestra');
+
+        const openai = new OpenAI({
+          apiKey: process.env.OPENAI_API_KEY
+        });
+
+        const prisma = new PrismaClient({
+          datasources: { db: { url: process.env.DATABASE_URL } }
+        });
+
+        async function summarizeCommit(commit) {
+          const diffText = commit.diff.map(file => 
+            `File: ${file.filename}\nStatus: ${file.status}\nChanges:\n${file.patch}`
+          ).join('\n\n');
+
+          const response = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+              {
+                role: "system",
+                content: `You are an expert programmer analyzing git commits.
+                Provide a concise summary of the changes focusing on:
+                - What functionality was added/modified/removed
+                - Any significant architectural changes
+                - Potential impact on the codebase
+                Keep the summary under 200 words.`
+              },
+              {
+                role: "user",
+                content: `Commit message: ${commit.commitMessage}\n\nDiff:\n${diffText}`
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 300
+          });
+
+          return response.choices[0].message.content;
+        }
+
+        async function processCommits() {
+          try {
+            const commits = JSON.parse(process.env.COMMITS);
+            
+            for (const commit of commits) {
+              const summary = await summarizeCommit(commit);
+              
+              await prisma.commit.create({
+                data: {
+                  projectId: process.env.PROJECT_ID,
+                  commitHash: commit.commitHash,
+                  commitMessage: commit.commitMessage,
+                  commitAuthorName: commit.commitAuthorName,
+                  commitDate: commit.commitDate,
+                  commitAuthorAvatar: commit.commitAuthorAvatar,
+                  summary: summary
+                }
+              });
+            }
+
+            Kestra.outputs({ status: 'success', processedCommits: commits.length });
+          } catch (error) {
+            console.error('Error processing commits:', error);
+            process.exit(1);
+          }
+        }
+
+        processCommits();
+
+triggers:
+  - id: schedule_trigger
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "*/15 * * * *"  # Run every 15 minutes
+    conditions:
+      - type: io.kestra.plugin.core.condition.ExecutionStatusCondition
+        in:
+          - SUCCESS
+    stopAfter:
+      - FAILED
+    timezone: UTC
+
+errors:
+  - id: error_notification
+    type: io.kestra.plugin.core.log.Log
+    level: ERROR
+    message: "Commit analysis failed for project {{ inputs.project_id }}"
