@@ -92,6 +92,12 @@ npm run dev
 
 
 
+<img width="1792" alt="Screenshot 2024-12-01 at 3 26 22 PM" src="https://github.com/user-attachments/assets/37bb8321-59cd-45cf-9be0-96ce26601433">
+
+<img width="1792" alt="Screenshot 2024-12-01 at 2 56 53 PM" src="https://github.com/user-attachments/assets/76c8a7d3-c9bc-41f4-bf7d-5be827f2b8eb">
+
+<img width="1792" alt="Screenshot 2024-12-01 at 3 25 22 PM" src="https://github.com/user-attachments/assets/b1d47d8e-e064-48d1-9e82-8a64bd6689c6">
+
 
 
 
