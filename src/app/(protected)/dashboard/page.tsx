@@ -9,13 +9,15 @@ import CommitLog from './commit-log'
 import ArchiveButton from './archive-button'
 import InviteButton from './invite-button'
 import TeamMembers from './team-members'
+import { Meteors } from '@/components/meteors'
 
 const DashboardPage = () => {
     const { project } = useProject()
 
     return (
-        <div className="min-h-screen bg-black text-gray-300 p-6">
-            <div className="max-w-7xl mx-auto space-y-8">
+        <div className="min-h-screen bg-black text-gray-300 p-6 relative overflow-hidden">
+            <Meteors number={20} className="!absolute" />
+            <div className="max-w-7xl mx-auto space-y-8 relative z-10">
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                     <div className="w-full lg:w-auto p-4 rounded-xl bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg transition-all duration-300 hover:shadow-blue-900/20">
                         <div className="flex items-center">
